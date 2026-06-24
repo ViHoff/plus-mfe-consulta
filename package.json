@@ -1,10 +1,10 @@
 {
-  "name": "plus-mfe-auth",
+  "name": "plus-mfe-consulta",
   "version": "1.0.0",
   "scripts": {
-    "dev": "vite --port 4001",
+    "dev": "vite --port 3002",
     "build": "vite build",
-    "preview": "vite preview --port 4001"
+    "preview": "vite preview --port 3002"
   },
   "dependencies": {
     "@emotion/react": "^11.14.0",
