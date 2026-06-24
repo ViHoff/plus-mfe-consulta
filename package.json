@@ -2,9 +2,10 @@
   "name": "plus-mfe-consulta",
   "version": "1.0.0",
   "scripts": {
-    "dev": "vite --port 3002",
+    "dev": "vite --port 4001",
     "build": "vite build",
-    "preview": "vite preview --port 3002"
+    "preview": "vite preview --port 4001",
+    "test": "vitest run"
   },
   "dependencies": {
     "@emotion/react": "^11.14.0",
@@ -16,6 +17,7 @@
   "devDependencies": {
     "@originjs/vite-plugin-federation": "^1.3.5",
     "@vitejs/plugin-react": "^4.2.1",
-    "vite": "^5.1.0"
+    "vite": "^5.1.0",
+    "vitest": "^1.0.0"
   }
 }
