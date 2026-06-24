@@ -10,6 +10,8 @@ import {
   Chip,
   CircularProgress,
 } from "@mui/material";
+import { secureFetch } from "../api";
+
 
 export interface SizeResponseDto {
   id: string;
@@ -67,14 +69,13 @@ export default function ConsultaPecas() {
       if (filtros.cor) parametros.append("cor", filtros.cor);
       if (filtros.tamanho) parametros.append("tamanho", filtros.tamanho);
 
-      // 2. Chama a API real na porta 3067 (ajuste a URL se o back-end estiver em outra)
+      // 2. Chama a API real na porta 3067 usando secureFetch
       const url = `http://localhost:3067/consulta/buscarPecas?${parametros.toString()}`;
       
-      const resposta = await fetch(url, {
+      const resposta = await secureFetch(url, {
         method: "GET",
         headers: {
           "Content-Type": "application/json",
-          // Se essa rota for protegida no futuro, você vai precisar do "Authorization": `Bearer ${token}` aqui
         }
       });
 
