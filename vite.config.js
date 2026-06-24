@@ -6,13 +6,12 @@ export default defineConfig({
   plugins: [
     react(),
     federation({
-      name: "mfe_auth",
+      name: "consultaApp",
       filename: "remoteEntry.js",
-      // Componentes expostos para o Shell consumir
       exposes: {
         './ConsultaPecas': './src/pages/ConsultaPecas.tsx'
       },
-      shared: ["react", "react-dom"],
+      shared: ["react", "react-dom", "@mui/material", "@emotion/react", "@emotion/styled"], 
     }),
   ],
   build: {
@@ -26,7 +25,7 @@ export default defineConfig({
     cors: true
   },
   preview: {
-    port: 4001,
+    port: 3002,
     host: true,
   },
 });
