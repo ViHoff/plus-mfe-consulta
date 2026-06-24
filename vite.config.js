@@ -11,7 +11,7 @@ export default defineConfig({
       exposes: {
         './ConsultaPecas': './src/pages/ConsultaPecas.tsx'
       },
-      shared: ["react", "react-dom", "@mui/material", "@emotion/react", "@emotion/styled"], 
+      shared: ["react", "react-dom", "@mui/material", "@emotion/react", "@emotion/styled"],
     }),
   ],
   build: {

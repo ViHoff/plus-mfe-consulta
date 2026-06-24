@@ -15,7 +15,7 @@ import { secureFetch } from "../api";
 
 export interface SizeResponseDto {
   id: string;
-  nome: string; 
+  nome: string;
   descricao: string | null;
   ativo: boolean;
 }
@@ -55,7 +55,7 @@ export default function ConsultaPecas() {
   });
 
   // Dizemos ao TypeScript que este array só aceita produtos do tipo correto
-  const [produtos, setProdutos] = useState<ProductDetailResponseDto[]>([]); 
+  const [produtos, setProdutos] = useState<ProductDetailResponseDto[]>([]);
   const [carregando, setCarregando] = useState<boolean>(false);
 
   const lidarComBusca = async (e: FormEvent<HTMLFormElement>) => {
@@ -71,7 +71,7 @@ export default function ConsultaPecas() {
 
       // 2. Chama a API real na porta 3067 usando secureFetch
       const url = `http://localhost:3067/consulta/buscarPecas?${parametros.toString()}`;
-      
+
       const resposta = await secureFetch(url, {
         method: "GET",
         headers: {
@@ -114,9 +114,9 @@ export default function ConsultaPecas() {
         Consulta de Peças
       </Typography>
 
-      <Box 
-        component="form" 
-        onSubmit={lidarComBusca} 
+      <Box
+        component="form"
+        onSubmit={lidarComBusca}
         sx={{ mb: 4, display: 'flex', gap: 2, flexWrap: 'wrap', alignItems: 'center' }}
       >
         <TextField
@@ -145,9 +145,9 @@ export default function ConsultaPecas() {
           size="small"
           sx={{ width: 100 }}
         />
-        <Button 
-          type="submit" 
-          variant="contained" 
+        <Button
+          type="submit"
+          variant="contained"
           color="primary"
           disabled={carregando}
         >

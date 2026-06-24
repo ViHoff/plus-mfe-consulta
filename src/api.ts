@@ -54,15 +54,63 @@ export class InvalidRefreshTokenError extends Error {
  * @param baseUrl Base URL of the authentication microservice. Defaults to "http://localhost:3001".
  * @returns The newly received access token.
  */
+/**
+ * Performs a silent login using the seeded admin developer credentials.
+ * This is used to initialize the frontend with valid tokens without requiring manual user login.
+ * 
+ * @param baseUrl Base URL of the authentication microservice.
+ * @returns The new access token.
+ */
+async function silentLogin(baseUrl: string): Promise<string> {
+  const response = await fetch(`${baseUrl}/auth/login`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+      email: "admindev@admin.com",
+      password: "Senha123"
+    }),
+  });
+
+  if (!response.ok) {
+    throw new Error("Silent autologin failed: credentials invalid or auth server down.");
+  }
+
+  const data = await response.json();
+  if (!data.access_token) {
+    throw new Error("Invalid response from auth server during silent login.");
+  }
+
+  localStorage.setItem("access_token", data.access_token);
+  if (data.refresh_token) {
+    localStorage.setItem("refresh_token", data.refresh_token);
+  }
+
+  return data.access_token;
+}
+
+/**
+ * Refreshes the access token using the stored refresh token.
+ * 
+ * This function:
+ * 1. Retrieves the refresh token from localStorage.
+ * 2. Calls the auth refresh endpoint (default: http://localhost:3001/auth/refresh).
+ * 3. Updates the access token (and refresh token, if a new one is returned) in localStorage.
+ * 4. Handles specific error states: missing token, server down, or invalid/expired token.
+ * 
+ * @param baseUrl Base URL of the authentication microservice. Defaults to "http://localhost:3001".
+ * @returns The newly received access token.
+ */
 export async function refreshAccessToken(
   baseUrl: string = "http://localhost:3001"
 ): Promise<string> {
   // 1. Retrieve the refresh token from localStorage
   const refreshToken = localStorage.getItem("refresh_token");
 
-  // Handle error: refresh token not existing
+  // If no refresh token exists, perform a silent autologin to fetch a new set of tokens.
   if (!refreshToken) {
-    throw new RefreshTokenNotFoundError();
+    return await silentLogin(baseUrl);
   }
 
   let response: Response;
@@ -85,17 +133,22 @@ export async function refreshAccessToken(
 
   // Handle error: refresh token is expired, invalid, or server returned other error code
   if (!response.ok) {
-    let errorDetail = "Refresh token is expired or invalid.";
-    let details = null;
+    // If the refresh token is expired/invalid, try a silent autologin fallback
     try {
-      details = await response.json();
-      if (details && details.detail) {
-        errorDetail = details.detail;
-      }
+      return await silentLogin(baseUrl);
     } catch {
-      // Response was not JSON
+      let errorDetail = "Refresh token is expired or invalid.";
+      let details = null;
+      try {
+        details = await response.json();
+        if (details && details.detail) {
+          errorDetail = details.detail;
+        }
+      } catch {
+        // Response was not JSON
+      }
+      throw new InvalidRefreshTokenError(errorDetail, response.status, details);
     }
-    throw new InvalidRefreshTokenError(errorDetail, response.status, details);
   }
 
   const data: TokenResponse = await response.json();
@@ -138,8 +191,17 @@ export async function secureFetch(
     method: options.method || "GET",
   };
 
-  // Get the token and attach it as Bearer
-  const accessToken = localStorage.getItem("access_token") || "";
+  // Get the token and attach it as Bearer. 
+  // If no token exists, attempt to run the refresh flow (which triggers silent autologin).
+  let accessToken = localStorage.getItem("access_token") || "";
+  if (!accessToken) {
+    try {
+      accessToken = await refreshAccessToken(authBaseUrl);
+    } catch (err) {
+      console.warn("Could not retrieve initial access token silently:", err);
+    }
+  }
+
   const headers = new Headers(requestOptions.headers);
   if (accessToken) {
     headers.set("Authorization", `Bearer ${accessToken}`);
@@ -157,7 +219,7 @@ export async function secureFetch(
   // If the access token is expired/invalid (401 Unauthorized)
   if (response.status === 401) {
     try {
-      // Attempt to refresh the access token
+      // Attempt to refresh the access token (which will fall back to silentLogin if needed)
       const newAccessToken = await refreshAccessToken(authBaseUrl);
       
       // Update authorization header with the new access token
