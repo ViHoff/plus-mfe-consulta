@@ -9,6 +9,11 @@ import {
   Box,
   Chip,
   CircularProgress,
+  Select,
+  MenuItem,
+  FormControl,
+  InputLabel,
+  SelectChangeEvent
 } from "@mui/material";
 import { secureFetch } from "../api";
 
@@ -32,7 +37,7 @@ export interface VariantResponseDto {
   atualizadoEm: string | null;
 }
 
-export interface ProductDetailResponseDto {
+export interface ConsultaProdutoResponseDto {
   id: string;
   nome: string;
   descricao: string | null;
@@ -44,6 +49,8 @@ export interface ProductDetailResponseDto {
   criadoEm: string;
   atualizadoEm: string;
   variantes: VariantResponseDto[];
+  estoque?: number;
+  lojaId?: number;
 }
 
 export default function ConsultaPecas() {
@@ -51,11 +58,12 @@ export default function ConsultaPecas() {
   const [filtros, setFiltros] = useState({
     nome: "",
     tamanho: "",
-    cor: ""
+    cor: "",
+    categoriaId: ""
   });
 
   // Dizemos ao TypeScript que este array só aceita produtos do tipo correto
-  const [produtos, setProdutos] = useState<ProductDetailResponseDto[]>([]);
+  const [produtos, setProdutos] = useState<ConsultaProdutoResponseDto[]>([]);
   const [carregando, setCarregando] = useState<boolean>(false);
 
   const lidarComBusca = async (e: FormEvent<HTMLFormElement>) => {
@@ -68,6 +76,7 @@ export default function ConsultaPecas() {
       if (filtros.nome) parametros.append("nome", filtros.nome);
       if (filtros.cor) parametros.append("cor", filtros.cor);
       if (filtros.tamanho) parametros.append("tamanho", filtros.tamanho);
+      if (filtros.categoriaId) parametros.append("categoriaId", filtros.categoriaId);
 
       // 2. Chama a API real na porta 3067 usando secureFetch
       const url = `http://localhost:3067/consulta/buscarPecas?${parametros.toString()}`;
@@ -105,6 +114,11 @@ export default function ConsultaPecas() {
     setFiltros((prev) => ({ ...prev, [name]: value }));
   };
 
+  const lidarComMudancaSelect = (e: SelectChangeEvent<string>) => {
+    const { name, value } = e.target;
+    setFiltros((prev) => ({ ...prev, [name as string]: value }));
+  };
+
   // ==========================================
   // 4. RENDERIZAÇÃO
   // ==========================================
@@ -136,6 +150,23 @@ export default function ConsultaPecas() {
           size="small"
           sx={{ width: 120 }}
         />
+        <FormControl variant="outlined" size="small" sx={{ minWidth: 150 }}>
+          <InputLabel id="categoria-label">Categoria</InputLabel>
+          <Select
+            labelId="categoria-label"
+            name="categoriaId"
+            value={filtros.categoriaId}
+            onChange={lidarComMudancaSelect}
+            label="Categoria"
+          >
+            <MenuItem value=""><em>Todas</em></MenuItem>
+            <MenuItem value="cat-001">Camiseta</MenuItem>
+            <MenuItem value="cat-002">Calça</MenuItem>
+            <MenuItem value="cat-003">Tênis</MenuItem>
+            <MenuItem value="cat-004">Jaqueta</MenuItem>
+            <MenuItem value="cat-005">Meia</MenuItem>
+          </Select>
+        </FormControl>
         <TextField
           label="Tamanho"
           name="tamanho"
@@ -178,6 +209,14 @@ export default function ConsultaPecas() {
 
                 <Typography variant="body2" color="text.secondary" gutterBottom>
                   Marca: {produto.marca || "Sem marca"}
+                </Typography>
+
+                <Typography variant="body2" color="text.secondary" gutterBottom sx={{ fontWeight: 'bold' }}>
+                  Estoque: {produto.estoque !== undefined ? produto.estoque : "Carregando..."}
+                </Typography>
+
+                <Typography variant="body2" color="text.secondary" gutterBottom>
+                  Loja: {produto.lojaId === 0 ? "Sede" : produto.lojaId ?? "N/A"}
                 </Typography>
 
                 <Typography variant="h5" color="primary" sx={{ my: 2 }}>
